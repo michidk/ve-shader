@@ -2,7 +2,7 @@
 
 ![Continuous integration](https://github.com/michidk/ve-shader/workflows/Continuous%20Integration/badge.svg)
 
-This utility compiles my custom glsl shader format to the SPIR-V format using shader-c.
+This utility compiles my custom GLSL shader format to the SPIR-V format using shader-c.
 
 Made for [our game engine](https://github.com/michidk/vulkan-engine).
 

@@ -251,15 +251,13 @@ fn parse(
                             version = Some(String::from(split[2]));
                         }
                     }
+                } else if curr_shader.is_empty() {
+                    curr_shader = line;
                 } else {
-                    if curr_shader.is_empty() {
-                        curr_shader = line;
-                    } else {
-                        // ignore empty lines and comments
-                        if !line.is_empty() && !line.starts_with("//") {
-                            curr_shader = format!("{}\n{}", &curr_shader, &line);
-                            line_mapping.push(idx);
-                        }
+                    // ignore empty lines and comments
+                    if !line.is_empty() && !line.starts_with("//") {
+                        curr_shader = format!("{}\n{}", &curr_shader, &line);
+                        line_mapping.push(idx);
                     }
                 }
             }
