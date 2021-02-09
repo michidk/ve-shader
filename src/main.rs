@@ -214,6 +214,7 @@ fn parse(
     let mut curr_shader = String::new();
     let mut shader_type: Option<shaderc::ShaderKind> = None;
     let mut line_mapping: Vec<usize> = Vec::new();
+    let mut version: Option<String> = None;
 
     if let Ok(file) = File::open(&path) {
         // read line-by-line
@@ -238,6 +239,7 @@ fn parse(
                                         kind,
                                         line_mapping,
                                         &output_path,
+                                        &version,
                                     )?;
 
                                     curr_shader = String::new();
@@ -245,6 +247,8 @@ fn parse(
                                 }
                                 shader_type = Some(new_kind);
                             }
+                        } else if instruction.contains("VERSION") && split.len() >= 3 {
+                            version = Some(String::from(split[2]));
                         }
                     }
                 } else {
@@ -271,6 +275,7 @@ fn parse(
             kind,
             line_mapping,
             &output_path,
+            &version,
         )?;
     }
     Ok(())
@@ -284,9 +289,18 @@ fn compile_shader(
     kind: shaderc::ShaderKind,
     line_mapping: Vec<usize>,
     output_path: &Path,
+    version: &Option<String>,
 ) -> Result<(), CompilerError> {
-    debug!("Compiling: {}", &curr_shader);
+    // add version to curr_shader
+    let curr_shader: String = if let Some(version) = version {
+        format!("#version {}\n{}", version, curr_shader)
+    } else {
+        String::from(curr_shader)
+    };
 
+    debug!("Compiling:\n{}", &curr_shader);
+
+    // compile
     let mut compiler = shaderc::Compiler::new().unwrap();
     let out = compiler
         .compile_into_spirv(

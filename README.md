@@ -26,16 +26,30 @@ For example, `cargo run -- ./shaders/*.glsl -o ./output` compiles all shaders in
 
 ## Custom Format
 
-Our custom format combines vertex, fragment, and geometry shader in one file. `//#` at the beginning of a line denotes that a custom instruction to this transpiler follows. While the commands NAME, AUTHOR, and DESCRIPTION are optional (they are not even parsed), TYPE will instruct this utility to compile the following to a shader of that type.
+Our custom format combines vertex, fragment, and geometry shader in one file.
+
+### Instructions
+
+`//#` at the beginning of a line denotes that a custom instruction follows. While the most instructions are optional, some are mandatory. One such instruction is `TYPE`, which will instruct this utility to compile the following code until the next type-instruction appears, to a shader of that type.
+
+|Instruction|Required?|Arguments|Description|Example|
+|--- | --- | --- | --- | --- |
+|NAME|no|String|pretty formatted name of the shader||`//# NAME Phong Shader`|
+|AUTHOR|no|String|author of the shader||`//# AUTHOR John Doe`|
+|DESCRIPTION|no|String|describes what the shader does|`//# DESCRIPTION Applies the phong reflection model.`|
+|VERSION|no|Version|adds `#version <version>` to each shader|`//# VERSION 450`|
+|TYPE|yes|VERTEX,FRAGMENT,GEOMETRY|sets the type of the shader that follows|`//# TYPE VERTEX`|
+
+### Example
 
 ```glsl
 //# NAME Vertex Color
 //# AUTHOR Michael Lohr
-//# DESCRIPTION Just renders the vertex colors, nothing else.
+//# DESCRIPTION Renders the vertex colors
+
+//# VERSION 450
 
 //# TYPE VERTEX
-#version 450
-
 layout (location = 0) in vec3 i_position;
 layout (location = 1) in mat4 i_model_matrix;
 layout (location = 5) in vec4 i_color;
@@ -50,8 +64,6 @@ void main() {
 }
 
 //# TYPE FRAGMENT
-#version 450
-
 layout (location = 0) in vec4 i_color;
 layout (location = 0) out vec4 o_color;
 
