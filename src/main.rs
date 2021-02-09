@@ -53,7 +53,7 @@ enum TargetVersion {
 }
 
 impl TargetVersion {
-    fn to_bitmask(self) -> u32 {
+    fn into_bitmask(self) -> u32 {
         match self {
             TargetVersion::Vulkan1_0 => 1 << 22,
             TargetVersion::Vulkan1_1 => 1 << 22 | 1 << 12,
@@ -70,7 +70,7 @@ impl FromStr for TargetVersion {
             "vulkan" | "vulkan1_0" => Ok(TargetVersion::Vulkan1_0),
             "vulkan1_1" => Ok(TargetVersion::Vulkan1_1),
             "vulkan1_2" => Ok(TargetVersion::Vulkan1_2),
-            _ => return Err(CliError::InvalidTarget(String::from(s))),
+            _ => Err(CliError::InvalidTarget(String::from(s))),
         }
     }
 }
@@ -149,7 +149,7 @@ fn main() -> Result<(), CliError> {
     // target version
     options.set_target_env(
         shaderc::TargetEnv::Vulkan,
-        args.shader_version.unwrap_or_default().to_bitmask(),
+        args.shader_version.unwrap_or_default().into_bitmask(),
     );
 
     // target environment
@@ -229,8 +229,9 @@ fn parse(
                         if instruction.contains("TYPE") {
                             // parse instruction arguments
                             if let Some(&token) = split.get(2) {
-                                let new_kind = parse_shader_kind(token)
-                                    .ok_or(CompilerError::UnknownShaderType(String::from(token)))?;
+                                let new_kind = parse_shader_kind(token).ok_or_else(|| {
+                                    CompilerError::UnknownShaderType(String::from(token))
+                                })?;
                                 if let Some(kind) = shader_type {
                                     compile_shader(
                                         &curr_shader,
@@ -282,7 +283,7 @@ fn parse(
 /// Compiles a single shader
 fn compile_shader(
     curr_shader: &str,
-    path: &PathBuf,
+    path: &Path,
     options: &shaderc::CompileOptions,
     kind: shaderc::ShaderKind,
     line_mapping: Vec<usize>,
@@ -309,7 +310,7 @@ fn compile_shader(
             Some(&options),
         )
         .map_err(|e| {
-            // replaces error lines from what the parser saw to to what is actually used in the input file
+            // replaces error lines from what the parser saw to what is actually used in the input file
             let err = e.to_string();
             let captures = REG
                 .captures(&err)
@@ -318,30 +319,24 @@ fn compile_shader(
                 .get(1)
                 .expect("Failed error translation: no capture found")
                 .as_str();
-            let old_line: usize = first_capture.parse().expect(
-                format!(
+
+            let old_line: usize = first_capture.parse().unwrap_or_else(|_| {
+                panic!(
                     "Failed error translation: capture not usize: {}",
                     first_capture
                 )
-                .as_str(),
-            );
+            });
 
-            CompilerError::Compilation(format!(
-                "{}",
-                str::replace(
-                    &e.to_string(),
-                    &format!(":{}:", old_line),
-                    &format!(
-                        ":{}:",
-                        line_mapping.get(old_line - 1).expect(
-                            format!(
-                                "Failed error translation: couldn't find line mapping: {}",
-                                old_line
-                            )
-                            .as_str()
-                        )
-                    ),
-                )
+            CompilerError::Compilation(str::replace(
+                &e.to_string(),
+                &format!(":{}:", old_line),
+                &format!(
+                    ":{}:",
+                    line_mapping.get(old_line - 1).unwrap_or_else(|| panic!(
+                        "Failed error translation: couldn't find line mapping: {}",
+                        old_line
+                    ))
+                ),
             ))
         })?;
 
