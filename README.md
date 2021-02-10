@@ -1,4 +1,4 @@
-# Vulkan Shader Compiler
+# Vulkan Shader Compiler Utility
 
 ![Continuous integration](https://github.com/michidk/ve-shader/workflows/Continuous%20Integration/badge.svg)
 

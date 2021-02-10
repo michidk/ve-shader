@@ -3,6 +3,12 @@ name = "ve_shader"
 version = "0.1.0"
 authors = ["Michael Lohr <michael@lohr-ffb.de>", "Shemnei"]
 edition = "2018"
+readme = "README.md"
+repository = "https://github.com/michidk/ve-shader"
+license = "MIT"
+keywords = ["gamedev", "graphics", "shader"]
+categories = ["command-line-utilities", "compilers"]
+
 
 [dependencies]
 structopt = "0.3.21"
