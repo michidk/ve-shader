@@ -1,6 +1,6 @@
 [package]
 name = "ve_shader"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Michael Lohr <michael@lohr-ffb.de>", "Shemnei"]
 description = "This utility compiles a custom GLSL shader format to the SPIR-V format using shader-c."
 edition = "2018"
