@@ -1,15 +1,7 @@
 #![feature(once_cell)]
 
 use log::{debug, error, info, warn};
-use regex::Regex;
-use std::{
-    fs,
-    fs::File,
-    io::{BufRead, BufReader},
-    lazy::SyncLazy,
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::{fs, fs::File, io::{BufRead, BufReader}, lazy::SyncLazy, path::{Path, PathBuf}, process::exit, str::FromStr};
 use structopt::StructOpt;
 
 // Cli arguments
@@ -86,14 +78,14 @@ impl Default for TargetVersion {
 enum CliError {
     #[error("Invalid target: {0}")]
     InvalidTarget(String),
-    #[error("Unknown error")]
+    #[error("Error creating compiler. Is shaderc installed?")]
     CompilerCreation,
-    #[error("")]
+    #[error("Invalid glob pattern")]
     PatternError(#[from] glob::PatternError),
-    #[error("")]
+    #[error("Invalid glob")]
     GlobError(#[from] glob::GlobError),
-    #[error("")]
-    CompileOptionsError,
+    #[error("Output folder does not exist: {0}")]
+    OutputFolderNonExistant(String),
 }
 
 /// Happens during shader compilation; prints the error and continues
@@ -113,7 +105,7 @@ const GLOB_OPTIONS: glob::MatchOptions = glob::MatchOptions {
     require_literal_leading_dot: false,
 };
 
-fn main() -> Result<(), CliError> {
+fn main() {
     let args = CliArgs::from_args();
 
     if !args.verbose {
@@ -126,9 +118,16 @@ fn main() -> Result<(), CliError> {
 
     if args.rick {
         info!("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-        return Ok(());
+        exit(0);
     }
 
+    if let Err(err) = prepare(args) {
+        error!("{}", err);
+        exit(1);
+    }
+}
+
+fn prepare(args: CliArgs) -> Result<(), CliError> {
     let mut options = shaderc::CompileOptions::new().ok_or(CliError::CompilerCreation)?;
 
     // debug
@@ -162,6 +161,15 @@ fn main() -> Result<(), CliError> {
     }
 
     let output_path = Path::new(&args.output);
+    // check if output folder exists
+    if !output_path.exists() && !output_path.is_dir() {
+        return Err(CliError::OutputFolderNonExistant(
+            output_path
+                .to_str()
+                .expect("Invalid output path")
+                .to_owned(),
+        ));
+    }
 
     let glob = glob::glob_with(&args.glob, GLOB_OPTIONS)?;
     for path in glob {
@@ -172,7 +180,7 @@ fn main() -> Result<(), CliError> {
             if extension.to_ascii_lowercase() != "glsl" && !args.ignore_extension {
                 warn!("Skipped {} because it does not have the .glsl file extension. Ignore with --ignore-extension.", path.display());
             } else {
-                let options = options.clone().ok_or(CliError::CompileOptionsError)?;
+                let options = options.clone().expect("Couldn't clone shader options.");
 
                 info!("Compiling shader at path: {}", path.display());
                 if let Err(err) = parse(path, options, &output_path) {
@@ -190,7 +198,7 @@ fn main() -> Result<(), CliError> {
     Ok(())
 }
 
-static REG: SyncLazy<Regex> = SyncLazy::new(|| Regex::new(r":([0-9]*):").unwrap());
+static REG: SyncLazy<regex::Regex> = SyncLazy::new(|| regex::Regex::new(r":([0-9]*):").unwrap());
 
 /// Parses a shader file in the custom format
 fn parse(
