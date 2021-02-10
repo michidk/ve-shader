@@ -1,8 +1,8 @@
 # Vulkan Shader Compiler Utility
 
-![Continuous integration](https://github.com/michidk/ve-shader/workflows/Continuous%20Integration/badge.svg)
+[![MIT License](https://img.shields.io/crates/l/ve_shader)](https://choosealicense.com/licenses/mit/) [![Continuous integration](https://github.com/michidk/ve-shader/workflows/Continuous%20Integration/badge.svg)](https://github.com/michidk/ve-shader/actions) [![Crates.io](https://img.shields.io/crates/v/ve_shader)](https://crates.io/crates/ve_shader)
 
-This utility compiles my custom GLSL shader format to the SPIR-V format using shader-c.
+This utility transpiles a custom GLSL shader format (see below) to the SPIR-V format using shaderc.
 
 Made for [our game engine](https://github.com/michidk/vulkan-engine).
 
