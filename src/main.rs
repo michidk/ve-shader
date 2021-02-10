@@ -181,7 +181,7 @@ fn main() -> Result<(), CliError> {
             }
         } else {
             warn!(
-                "Ignored file {}, because no file extension was found.",
+                "Ignored file \"{}\", because no file extension was found.",
                 path.display()
             );
         }
