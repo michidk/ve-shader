@@ -1,7 +1,15 @@
 #![feature(once_cell)]
 
 use log::{debug, error, info, warn};
-use std::{fs, fs::File, io::{BufRead, BufReader}, lazy::SyncLazy, path::{Path, PathBuf}, process::exit, str::FromStr};
+use std::{
+    fs,
+    fs::File,
+    io::{BufRead, BufReader},
+    lazy::SyncLazy,
+    path::{Path, PathBuf},
+    process::exit,
+    str::FromStr,
+};
 use structopt::StructOpt;
 
 // Cli arguments
