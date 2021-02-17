@@ -301,6 +301,7 @@ fn parse(
 }
 
 /// Compiles a single shader
+#[allow(clippy::too_many_arguments)]
 fn compile_shader(
     curr_shader: &str,
     path: &Path,
@@ -313,7 +314,7 @@ fn compile_shader(
 ) -> Result<(), CompilerError> {
     // add version to curr_shader
     let curr_shader: String = if let Some(version) = version {
-        *added_statements = *added_statements + 1;
+        *added_statements += 1;
         format!("#version {}\n{}", version, curr_shader)
     } else {
         String::from(curr_shader)
