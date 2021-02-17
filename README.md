@@ -21,7 +21,7 @@ Then build with `cargo build`.
 
 Get an overview of the parameters with `ve_shader -h`.
 
-For example, `ve_shader ./shaders/*.glsl -o ./output` compiles all shaders in the `/shaders` folder and outputs the artifacts to the `/output` folder.
+For example, `ve_shader "./shaders/*.glsl" -o ./output` compiles all shaders in the `/shaders` folder and outputs the artifacts to the `/output` folder.
 
 
 ## Custom Format
