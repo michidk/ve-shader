@@ -231,6 +231,7 @@ fn parse(
     let mut shader_type: Option<shaderc::ShaderKind> = None;
     let mut line_mapping: Vec<usize> = Vec::new();
     let mut version: Option<String> = None;
+    let mut added_statements = 0; // count added statements, to correct line numbers in errors
 
     if let Ok(file) = File::open(&path) {
         // read line-by-line
@@ -257,6 +258,7 @@ fn parse(
                                         line_mapping,
                                         &output_path,
                                         &version,
+                                        &mut added_statements,
                                     )?;
 
                                     curr_shader = String::new();
@@ -270,11 +272,12 @@ fn parse(
                     }
                 } else if curr_shader.is_empty() {
                     curr_shader = line;
+                    line_mapping.push(idx + 1);
                 } else {
                     // ignore empty lines and comments
                     if !line.is_empty() && !line.starts_with("//") {
                         curr_shader = format!("{}\n{}", &curr_shader, &line);
-                        line_mapping.push(idx);
+                        line_mapping.push(idx + 1);
                     }
                 }
             }
@@ -291,6 +294,7 @@ fn parse(
             line_mapping,
             &output_path,
             &version,
+            &mut added_statements,
         )?;
     }
     Ok(())
@@ -305,9 +309,11 @@ fn compile_shader(
     line_mapping: Vec<usize>,
     output_path: &Path,
     version: &Option<String>,
+    added_statements: &mut usize,
 ) -> Result<(), CompilerError> {
     // add version to curr_shader
     let curr_shader: String = if let Some(version) = version {
+        *added_statements = *added_statements + 1;
         format!("#version {}\n{}", version, curr_shader)
     } else {
         String::from(curr_shader)
@@ -348,10 +354,12 @@ fn compile_shader(
                 &format!(":{}:", old_line),
                 &format!(
                     ":{}:",
-                    line_mapping.get(old_line - 1).unwrap_or_else(|| panic!(
-                        "Failed error translation: couldn't find line mapping: {}",
-                        old_line
-                    ))
+                    line_mapping
+                        .get(old_line - *added_statements)
+                        .unwrap_or_else(|| panic!(
+                            "Failed error translation: couldn't find line mapping: {}",
+                            old_line
+                        ))
                 ),
             ))
         })?;
